@@ -11,4 +11,10 @@ class AlterWords:
     def add_numbers_symbols(self, word, add_numbers=True, add_symbols=True):
         variations = set()
         adjust_word_list = [word]
+
+        numbers_to_add = [''.join(combo) for combo in itertools.permutations(self.numbers,self.max_numbers_in_a_row)]
+        for i in numbers_to_add:
+            print(i)
         
+x = AlterWords()
+x.add_numbers_symbols("test", True, True)
