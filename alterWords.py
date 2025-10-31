@@ -1,32 +1,53 @@
 import itertools
-from wordlist import Loader
 
 class AlterWords:
-    def __init__(self, max_numbers_in_a_row=3, max_symbols=2):
+    def __init__(self, max_numbers_in_a_row=3, min_symbols=1, max_symbols=2):
         self.max_numbers_in_a_row = max_numbers_in_a_row
+        self.min_symbols = min_symbols
         self.max_symbols = max_symbols
+        
         self.numbers = ['0','1','2','3','4','5','6','7','8','9']
-        self.symbols = ['!','@','#','$','%','^','&','*','(',')','-','_','=','+','[',']','{','}',';',':','"',"'","<",">",",",".","?","/","|","\\"]
+        self.symbols = ['!','@','#','$','%','^','&','*','(',')','-','_','=','+',
+                        '[',']','{','}',';',':','"',"'","<",">",",",".","?","/","|","\\"]
 
-    def add_numbers_symbols(self, add_numbers=True, add_symbols=True):
-        variations = set()
+    def add_numbers_symbols(self):
         adjust_word_list = []
 
-        numbers_to_add = [''.join(combo) for combo in itertools.permutations(self.numbers,self.max_numbers_in_a_row)]
+        numbers_to_add = [''.join(combo) for combo in itertools.permutations(self.numbers, self.max_numbers_in_a_row)]
+        numbers_to_add += [num * self.max_numbers_in_a_row for num in self.numbers]
 
-        if numbers_to_add != 1:
-            numbers_to_add += [num * self.max_numbers_in_a_row for num in self.numbers]
+        total_size = self.max_symbols + 1  
 
-        total_size = self.max_symbols + 1
         for i in range(total_size):
-            temp_word_list_full =[]
+            temp_word_list_full = []
             for num in numbers_to_add:
                 temp_word_list = [""] * total_size
-                temp_word_list[i] = num      
-                temp_word_list_full.append(temp_word_list)
-            adjust_word_list.append(temp_word_list_full)
+                temp_word_list[i] = num
+                temp_word_list_full.append(temp_word_list.copy())
+            adjust_word_list.append(temp_word_list_full.copy())
 
-        for word_variation in len(adjust_word_list[0]):
-            total_pos = []
-x = AlterWords(max_numbers_in_a_row=2)
-x.add_numbers_symbols(True, True)
+        all_symbol_combos = []
+        for length in range(self.min_symbols, self.max_symbols + 1):
+            all_symbol_combos.extend(itertools.permutations(self.symbols, length))
+
+        final_combos = []
+        for index_list in adjust_word_list:
+            for position_list in index_list:
+                for symbol_combo in all_symbol_combos:
+                    filled = position_list.copy()
+                    sym_index = 0
+                    for k in range(len(filled)):
+                        if filled[k] == "" and sym_index < len(symbol_combo):
+                            if symbol_combo[sym_index] == '':
+                                continue
+                            filled[k] = symbol_combo[sym_index]
+                            sym_index += 1
+
+                            
+
+                    final_combos.append(filled)
+
+        print(f"Total generated: {len(final_combos)}")
+
+        return final_combos
+
