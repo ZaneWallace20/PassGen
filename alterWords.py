@@ -14,7 +14,10 @@ class AlterWords:
     def add_numbers_symbols(self):
         adjust_word_list = []
 
+        # gen number combinations
         numbers_to_add = [''.join(combo) for combo in itertools.permutations(self.numbers, self.max_numbers_in_a_row)]
+
+        # adds n amount of the same number ie 00,11,22...
         numbers_to_add += [num * self.max_numbers_in_a_row for num in self.numbers]
 
         total_size = self.max_symbols + 1  
@@ -27,10 +30,14 @@ class AlterWords:
                 temp_word_list_full.append(temp_word_list.copy())
             adjust_word_list.append(temp_word_list_full.copy())
 
+
+        # generate all symbol combinations of n length from min_symbols to max_symbols
         all_symbol_combos = []
         for length in range(self.min_symbols, self.max_symbols + 1):
             all_symbol_combos.extend(itertools.permutations(self.symbols, length))
 
+        # generate all combinations of numbers and symbols
+        # fits the form of ["number","symbol","symbol"], ["symbol","number","symbol"], etc.
         final_combos = []
         for index_list in adjust_word_list:
             for position_list in index_list:
@@ -39,6 +46,7 @@ class AlterWords:
                     sym_index = 0
                     for k in range(len(filled)):
                         if filled[k] == "" and sym_index < len(symbol_combo):
+                            # used when min/max symbols dont match
                             if symbol_combo[sym_index] == '':
                                 continue
                             filled[k] = symbol_combo[sym_index]
@@ -51,4 +59,3 @@ class AlterWords:
         print(f"Total generated: {len(final_combos)}")
         gc.collect()
         return final_combos
-

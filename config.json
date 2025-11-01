@@ -1,0 +1,14 @@
+{
+
+
+    "wordlistFile": "InputOutput/words.txt",
+    "pathToHashcatFolder": "C:/Programing/Hashcat",
+    "outputFile": "InputOutput/cracked.txt",
+    "hashFile": "InputOutput/hashes.txt",
+    "hashType": 0,
+    "maxNumbersInARow": 2,
+    "minSymbols": 1,
+    "maxSymbols": 2,
+    "maxThreads": -1,
+    "maxBatchSize": 50000000
+}
