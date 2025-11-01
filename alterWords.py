@@ -1,4 +1,5 @@
 import itertools
+import gc
 
 class AlterWords:
     def __init__(self, max_numbers_in_a_row=3, min_symbols=1, max_symbols=2):
@@ -48,6 +49,6 @@ class AlterWords:
                     final_combos.append(filled)
 
         print(f"Total generated: {len(final_combos)}")
-
+        gc.collect()
         return final_combos
 
