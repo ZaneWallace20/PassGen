@@ -2,10 +2,11 @@ from alterWords import AlterWords
 import time
 import gc
 from wordlist import Loader
-import threading
+from concurrent.futures import ProcessPoolExecutor
 import os
 import json
 import subprocess
+import numpy as np
 
 class PassGen:
     def __init__(self, config_path='config.json'):
@@ -30,40 +31,38 @@ class PassGen:
     def save_to_disk(self, path, data):
         with open(path, 'w', encoding='utf-8') as f:
             for item in data:
-                f.write("%s\n" % item)
+                f.write(f"\n{item}")
 
     # ram destroyer D:
-    def threaded_function(self, word_list, max_batch_size, folder):
+    def threaded_function(self, word_list, max_batch_size, folder, thread_name):
+        print(f"Thread {thread_name} starting with {len(word_list)} words...")
         try:
             result_list = []
             current_count = 0
+
             for word in word_list:
                 for combo in self.combos:
                     for index in range(len(combo) + 1):
-                        combo_copy = combo.copy()
-                        combo_copy.insert(index, word)
-                        result_list.append(''.join(combo_copy))
+                        new_combo = combo[:index] + [word] + combo[index:]
+                        result_list.append(''.join(new_combo))
 
                         if len(result_list) >= max_batch_size:
-                            path = os.path.join(folder, f'temp_altered_words_{threading.get_ident()}_{current_count + 1}.txt')
-                            print(f"Thread {threading.get_ident()} saving {len(result_list)} words to {path}...")
+                            path = os.path.join(folder, f'temp_altered_words_{thread_name}_{current_count + 1}.txt')
+                            print(f"Thread {thread_name} saving {len(result_list)} words to {path}...")
                             self.save_to_disk(path, result_list)
-                            gc.collect()
                             result_list.clear()
                             current_count += 1
 
-            # Save any remaining
-            path = os.path.join(folder, f'temp_altered_words_{threading.get_ident()}_{current_count + 1}.txt')
-            print(f"Thread {threading.get_ident()} saving {len(result_list)} words to {path}...")
-            self.save_to_disk(path, result_list)
-            gc.collect()
-            result_list.clear()
+            # if any left 
+            if result_list:
+                path = os.path.join(folder, f'temp_altered_words_{thread_name}_{current_count + 1}.txt')
+                self.save_to_disk(path, result_list)
+                result_list.clear()
         except Exception as e:
-            print(f"Error in thread {threading.get_ident()}: {e}")
+            print(f"Error in thread {thread_name}: {e}")
+
     def run(self):
-
-
-
+        total_start = time.time()
         if os.path.exists(self.folder_path):
             print(f"Folder {self.folder_path} already exists.")
         else:
@@ -72,6 +71,8 @@ class PassGen:
             self.start_threads()
         
         self.run_hashcat()
+        total_end = time.time()
+        print(f"Total execution time: {total_end - total_start} seconds.")
 
     def start_threads(self):
         current_time = time.time()
@@ -84,30 +85,28 @@ class PassGen:
 
         print(f"Using {num_threads} threads for processing.")
 
-        threads = []
         total_words = len(self.words)
         if total_words == 0:
             print("No words to process. Exiting.")
-            exit(0)
+            return
 
-        chunk_size = max(1, total_words // num_threads)
-
+        chunks = np.array_split(self.words, num_threads)
+        chunk_size = len(chunks[0])
 
         print("Processing words in threads...")
         print(f"Total words: {total_words}, Chunk size: {chunk_size}")
 
-        for i in range(num_threads):
-            start = i * chunk_size
+        current_thread_name  = [i+1 for i in range(num_threads)]
 
-            # end check
-            end = -1 if i == num_threads - 1 else (i + 1) * chunk_size
-            chunk = self.words[start:end]
-            thread = threading.Thread(target=self.threaded_function, args=(chunk, self.max_batch_size, self.folder_path))
-            threads.append(thread)
-            thread.start()
+        with ProcessPoolExecutor(max_workers=num_threads) as executor:
+            executor.map(
+                self.threaded_function,
+                chunks,
+                [self.max_batch_size] * num_threads,
+                [self.folder_path] * num_threads,
+                current_thread_name
+        )
 
-        for thread in threads:
-            thread.join()
         done_time = time.time()
 
         print(f"All threads have completed in {done_time - current_time} seconds.")

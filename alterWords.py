@@ -9,7 +9,7 @@ class AlterWords:
         
         self.numbers = ['0','1','2','3','4','5','6','7','8','9']
         self.symbols = ['!','@','#','$','%','^','&','*','(',')','-','_','=','+',
-                        '[',']','{','}',';',':','"',"'","<",">",",",".","?","/","|","\\"]
+                        '[',']','{','}',';',':','"',"'","<",">",",",".","?","/","|","\\","`","~"]
 
     def add_numbers_symbols(self):
         adjust_word_list = []
@@ -18,7 +18,7 @@ class AlterWords:
         numbers_to_add = [''.join(combo) for combo in itertools.permutations(self.numbers, self.max_numbers_in_a_row)]
 
         # adds n amount of the same number ie 00,11,22...
-        numbers_to_add += [num * self.max_numbers_in_a_row for num in self.numbers]
+        numbers_to_add.extend([num * self.max_numbers_in_a_row for num in self.numbers])
 
         total_size = self.max_symbols + 1  
 
@@ -36,6 +36,9 @@ class AlterWords:
         for length in range(self.min_symbols, self.max_symbols + 1):
             all_symbol_combos.extend(itertools.permutations(self.symbols, length))
 
+        # add n amount of the same symbol ie !!,@@,##
+        all_symbol_combos.extend([symbol * self.max_symbols for symbol in self.symbols])
+        
         # generate all combinations of numbers and symbols
         # fits the form of ["number","symbol","symbol"], ["symbol","number","symbol"], etc.
         final_combos = []
