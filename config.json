@@ -6,7 +6,7 @@
     "hashFile": "InputOutput\\hashes.txt",
     "hashType": 0,
     "maxNumbersInARow": 2,
-    "minSymbols": 0,
+    "minSymbols": 1,
     "maxSymbols": 2,
     "maxThreads": -1,
     "maxBatchSize": 10000000
