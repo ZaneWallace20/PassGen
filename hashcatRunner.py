@@ -12,7 +12,7 @@ class HashcatRunner:
 
         hashes_path = os.path.join(os.getcwd(), self.hash_file)
         output_path = os.path.join(os.getcwd(), self.output_file)
-        print(output_path)
+        
         # runs hashcat over the massive wordlist in directory
         hashcat_cmd = [
             "hashcat",
@@ -23,8 +23,10 @@ class HashcatRunner:
         ]
 
         print("Executing Hashcat command: ", hashcat_cmd)
+        print("Hashcat path: ", self.hashcat_path)
         subprocess.run(hashcat_cmd, cwd=self.hashcat_path)
 
+        # save
         hashcat_cmd = [
             "hashcat",
             "--show",

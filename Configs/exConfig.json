@@ -1,5 +1,5 @@
 {
-    "wordlistFile": "InputOutput/worlist.txt",
+    "wordlistFile": "InputOutput/wordlist.txt",
     "pathToHashcatFolder": "C:/Hashcat",
     "outputFile": "InputOutput/cracked.txt",
     "wordlistsFolder": "Wordlist",

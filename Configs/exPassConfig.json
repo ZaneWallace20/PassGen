@@ -1,2 +1,7 @@
-{
-}
+[
+    {
+        "type": "word",
+        "minAmount": 1,
+        "maxAmount": 1
+    }
+]

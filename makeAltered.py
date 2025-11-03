@@ -15,8 +15,7 @@ class WordlistGenerator:
         with open(config_path, "r") as f:
             config = json.load(f)
             self.passStyle = config.get("passwordStyle")
-            self.should_permute = config.get("permutate", config.get("perumtate", False))
-            self.permute_indices = config.get("permutate", config.get("perumtate", []))
+            self.permute_indices = config.get("permutate", config.get("permutate", []))
 
         self.numbers = numbers or []
         self.symbols = symbols or []
@@ -55,23 +54,22 @@ class WordlistGenerator:
             })
 
         return result
-
     def _save_to_disk(self, path, data):
-        with open(path, 'w', encoding='utf-8') as f:
+        with open(path, 'a', encoding='utf-8') as f:  
             for item in data:
                 f.write(f"\n{item}")
 
-  
-
     def _threaded_function(self, combo_list, max_batch_size, thread_name):
-        
         print(f"Thread {thread_name} started with {len(combo_list)} combinations.")
+        
         result_list = []
-        current_count = 0
+        output_path = os.path.join(self.folder_path, f"altered_words_{thread_name}.txt")
+        
         for combo in combo_list:
             combo = list(combo)
             amount_to_add = combo.count(self.word_indicator)
-            perms = list(product(self.words, repeat=amount_to_add))
+            perms = product(self.words, repeat=amount_to_add)
+
             for perm in perms:
                 temp_combo = combo.copy()
                 index = 0
@@ -81,23 +79,20 @@ class WordlistGenerator:
                     index += 1
                 
                 final = ''.join(temp_combo)
-
                 result_list.append(final)
+                
                 if len(result_list) >= max_batch_size:
-                    path = os.path.join(self.folder_path, f'temp_altered_words_{thread_name}_{current_count + 1}.txt')
-                    print(f"Thread {thread_name} saving {len(result_list)} words to {path}...")
                     unique_results = list(set(result_list))
-                    self._save_to_disk(path, unique_results)
-
+                    self._save_to_disk(output_path, unique_results)
                     result_list.clear()
-                    current_count += 1 
-    
-        # if any left
+
+        # any left 
         if result_list:
-            path = os.path.join(self.folder_path, f'temp_altered_words_{thread_name}_{current_count + 1}.txt')
-            print(f"Thread {thread_name} saving {len(result_list)} words to {path}...")
-            self._save_to_disk(path, result_list)
-            result_list.clear()
+            unique_results = list(set(result_list))
+            self._save_to_disk(output_path, unique_results)
+
+        print(f"Thread {thread_name} finished writing to {output_path}.")
+
 
     def _generate_altered_list(self):
         format = self._generate_format()
@@ -122,16 +117,19 @@ class WordlistGenerator:
                 choice_list = list(choice_tuple)
 
                 if self.permute_indices:
-                    print(f"Permutating indices {self.permute_indices} for choice {choice_list}")
                     items_to_permute = [choice_list[i] for i in self.permute_indices]
-                    for perm in permutations(items_to_permute):
-                        new_choice = choice_list.copy()
-                        for idx, p in zip(self.permute_indices, perm):
-                            new_choice[idx] = p
-                        all_combinations.append(new_choice)
+
+                    for item in items_to_permute:
+                        temp_choice_list = choice_list.copy()
+                        choice_list.remove(item)
+                        for i in range(len(choice_list)+1):
+                            new_choice = choice_list.copy()
+                            new_choice.insert(i, item)
+                            all_combinations.append(new_choice)
+                                
+                        choice_list = temp_choice_list
                 else:
                     all_combinations.append(choice_list)
-            print(f"Generated {len(all_combinations)} combinations so far...")
         return all_combinations
     
 
