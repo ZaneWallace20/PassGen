@@ -10,15 +10,13 @@ class WordlistGenerator:
 
     def __init__(self, numbers=None, symbols=None, wordlist_file='wordlist.txt', max_batch_size=2_000_000, max_threads=-1, folder_path='Wordlists'):
 
-        # Read pass configuration here (allowed per request)
         config_path = os.path.join("Configs", "passConfig.json")
         with open(config_path, "r") as f:
             config = json.load(f)
             self.passStyle = config.get("passwordStyle")
-            # note: passConfig.json has a misspelled key in the sample; keep the old key for backwards compatibility
             self.should_permute = config.get("permutate", config.get("perumtate", False))
+            self.permute_indices = config.get("permutate", config.get("perumtate", []))
 
-        # The remaining values come from the main config and should be passed in by the caller
         self.numbers = numbers or []
         self.symbols = symbols or []
         self.max_batch_size = max_batch_size
@@ -44,6 +42,8 @@ class WordlistGenerator:
                 tokens = list(self.symbols)
             elif t in ("number", "numbers"):
                 tokens = list(self.numbers)
+            elif t == "custom":
+                tokens = [part.get("word", "")]
             else:
                 tokens = []
 
@@ -85,7 +85,9 @@ class WordlistGenerator:
                 if len(result_list) >= max_batch_size:
                     path = os.path.join(self.folder_path, f'temp_altered_words_{thread_name}_{current_count + 1}.txt')
                     print(f"Thread {thread_name} saving {len(result_list)} words to {path}...")
-                    self._save_to_disk(path, result_list)
+                    unique_results = list(set(result_list))
+                    self._save_to_disk(path, unique_results)
+
                     result_list.clear()
                     current_count += 1 
     
@@ -116,11 +118,17 @@ class WordlistGenerator:
                 part_lists.append(combos)
 
             for choice_tuple in product(*part_lists):
-                if self.should_permute:
-                    for perm in permutations(choice_tuple):
-                        all_combinations.append(list(perm))
+                choice_list = list(choice_tuple)
+
+                if self.permute_indices:
+                    items_to_permute = [choice_list[i] for i in self.permute_indices]
+                    for perm in permutations(items_to_permute):
+                        new_choice = choice_list.copy()
+                        for idx, p in zip(self.permute_indices, perm):
+                            new_choice[idx] = p
+                        all_combinations.append(new_choice)
                 else:
-                    all_combinations.append(list(choice_tuple))
+                    all_combinations.append(choice_list)
 
         return all_combinations
     
