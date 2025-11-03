@@ -1,4 +1,5 @@
 *.txt
 !words.txt
 config.json
+passConfig.json
 __pycache__/

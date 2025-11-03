@@ -5,7 +5,7 @@ class Loader:
     def _format_word(self, word):
         word = word.strip()
         word = word.replace(" ","")
-        return [word, word.lower()]
+        return [word, word.lower(), word.upper(), word.capitalize()]
 
     def load_words(self):
         with open(self.filepath, 'r') as file:
