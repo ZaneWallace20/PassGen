@@ -4,13 +4,14 @@ import json
 from wordlist import Loader
 import numpy as np
 import os
+import shutil
 import uuid
 
 class WordlistGenerator:
 
-    def __init__(self, numbers=None, symbols=None, wordlist_file='wordlist.txt', max_batch_size=2_000_000, max_threads=-1, folder_path='Wordlists'):
+    def __init__(self, numbers=None, symbols=None, wordlist_file='wordlist.txt', max_batch_size=2_000_000, max_threads=-1, folder_path='Wordlists', pass_config_extra="0"):
 
-        config_path = os.path.join("Configs", "passConfig.json")
+        config_path = os.path.join("Configs", f"passConfig{pass_config_extra}.json")
         with open(config_path, "r") as f:
             config = json.load(f)
             self.passStyle = config.get("passwordStyle")
@@ -121,6 +122,7 @@ class WordlistGenerator:
                 choice_list = list(choice_tuple)
 
                 if self.permute_indices:
+                    print(f"Permutating indices {self.permute_indices} for choice {choice_list}")
                     items_to_permute = [choice_list[i] for i in self.permute_indices]
                     for perm in permutations(items_to_permute):
                         new_choice = choice_list.copy()
@@ -129,7 +131,7 @@ class WordlistGenerator:
                         all_combinations.append(new_choice)
                 else:
                     all_combinations.append(choice_list)
-
+            print(f"Generated {len(all_combinations)} combinations so far...")
         return all_combinations
     
 
@@ -137,10 +139,11 @@ class WordlistGenerator:
 
         if os.path.exists(self.folder_path):
             print(f"Folder {self.folder_path} already exists.")
-            print("Please remove or rename the existing folder and try again.")
-            return
-        else:
-            os.makedirs(self.folder_path, exist_ok=True)
+            print("Clearing out...")
+            shutil.rmtree(self.folder_path)
+
+            
+        os.makedirs(self.folder_path, exist_ok=True)
         # Determine number of threads to use
         if isinstance(self.max_threads, int) and self.max_threads > 0:
             num_threads = self.max_threads
