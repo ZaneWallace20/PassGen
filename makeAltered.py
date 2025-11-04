@@ -63,6 +63,7 @@ class WordlistGenerator:
         print(f"Thread {thread_name} started with {len(combo_list)} combinations.")
         
         result_list = []
+        seen = set()
         output_path = os.path.join(self.folder_path, f"altered_words_{thread_name}.txt")
         
         for combo in combo_list:
@@ -79,17 +80,19 @@ class WordlistGenerator:
                     index += 1
                 
                 final = ''.join(temp_combo)
+                if final in seen:
+                    continue  
+                seen.add(final)
                 result_list.append(final)
                 
                 if len(result_list) >= max_batch_size:
-                    unique_results = list(set(result_list))
-                    self._save_to_disk(output_path, unique_results)
+                    self._save_to_disk(output_path, result_list)
+                    seen.clear()
                     result_list.clear()
 
         # any left 
         if result_list:
-            unique_results = list(set(result_list))
-            self._save_to_disk(output_path, unique_results)
+            self._save_to_disk(output_path, result_list)
 
         print(f"Thread {thread_name} finished writing to {output_path}.")
 
