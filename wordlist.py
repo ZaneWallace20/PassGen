@@ -11,6 +11,8 @@ class Loader:
 
     def load_words(self):
         with open(self.filepath, 'r') as file:
-            words = [formattedWord for line in file if line.strip() for formattedWord in self._format_word(line)]
-
+            
+            words = list(set([formattedWord for line in file if line.strip() for formattedWord in self._format_word(line)]))
+        
+        print(f"Loaded {len(words)} unique words from {self.filepath}")
         return words

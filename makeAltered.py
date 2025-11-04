@@ -1,4 +1,4 @@
-from itertools import product, permutations
+from itertools import product
 from concurrent.futures import ProcessPoolExecutor
 import json
 from wordlist import Loader
@@ -63,7 +63,6 @@ class WordlistGenerator:
         print(f"Thread {thread_name} started with {len(combo_list)} combinations.")
         
         result_list = []
-        seen = set()
         output_path = os.path.join(self.folder_path, f"altered_words_{thread_name}.txt")
         
         for combo in combo_list:
@@ -80,14 +79,10 @@ class WordlistGenerator:
                     index += 1
                 
                 final = ''.join(temp_combo)
-                if final in seen:
-                    continue  
-                seen.add(final)
                 result_list.append(final)
                 
                 if len(result_list) >= max_batch_size:
                     self._save_to_disk(output_path, result_list)
-                    seen.clear()
                     result_list.clear()
 
         # any left 
