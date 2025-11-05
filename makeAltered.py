@@ -25,7 +25,10 @@ class WordlistGenerator:
         self.folder_path = folder_path
 
         self.word_indicator = uuid.uuid4().hex
-        self.words = Loader(wordlist_file).load_words()
+        if wordlist_file != "":
+            self.words = Loader(wordlist_file).load_words()
+        else:
+            self.words = []
     def _generate_format(self):
         
         result = []
