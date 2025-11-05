@@ -14,8 +14,6 @@ class PassGen:
         with open(config_path, 'r') as f:
             self.config = json.load(f)
 
-        self.numbers = self.config.get('numbers', [])
-        self.symbols = self.config.get('symbols', [])
         self.wordlist_file = self.config.get('wordlistFile', 'wordlist.txt')
         self.max_batch_size = self.config.get('maxBatchSize', 2_000_000)
         self.max_threads = self.config.get('maxThreads', -1)
@@ -24,23 +22,22 @@ class PassGen:
         self.hash_file = self.config.get('hashFile', 'hashes.txt')
         self.output_file = self.config.get('outputFile', 'cracked.txt')
         self.hash_type = self.config.get('hashType', 0)
-        self.pass_config_amount = self.config.get('passConfigAmount', 1)
-
-
+        self.passConfigsPath = self.config.get('passConfigPath', os.path.join(base_dir, 'Configs', 'passConfigs.json'))
     def run(self):
         total_start = time.time()
 
-        for i in range(self.pass_config_amount):
+        # Determine the number of pass configurations
+        pass_configs = [os.path.join(self.passConfigsPath, name) for name in os.listdir(self.passConfigsPath) if name.endswith('.json')]
+        print(pass_configs)
+        for i in pass_configs:
             print(f"Starting pass configuration {i}...")
             # Instantiate WordlistGenerator with values read from main config
             wordlist_generator = WordlistGenerator(
-                numbers=self.numbers,
-                symbols=self.symbols,
                 wordlist_file=self.wordlist_file,
                 max_batch_size=self.max_batch_size,
                 max_threads=self.max_threads,
                 folder_path=self.folder_path,
-                pass_config_extra=str(i)
+                config_path=i
             )
 
             hashcat_runner = HashcatRunner(
@@ -56,7 +53,7 @@ class PassGen:
             # Run Mr. Cat using values pulled from config
             hashcat_runner.run_hashcat()    
 
-            total_end = time.time()
+        total_end = time.time()
         print(f"Total execution time: {total_end - total_start} seconds.")
 
 if __name__ == "__main__":  

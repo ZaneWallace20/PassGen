@@ -1,0 +1,31 @@
+{
+    "passwordStyle": [
+        {
+            "type": "custom",
+            "word": "liber8",
+            "minAmount": 1,
+            "maxAmount": 1
+        },
+        {
+            "type": "symbols",
+            "minAmount": 1,
+            "maxAmount": 1
+        },
+        {
+            "type": "word",
+            "minAmount": 1,
+            "maxAmount": 1
+        },
+        {
+            "type": "symbols",
+            "minAmount": 1,
+            "maxAmount": 1
+        },
+        {
+            "type": "word",
+            "minAmount": 1,
+            "maxAmount": 1
+        }
+    ],
+    "perumtate": []
+}

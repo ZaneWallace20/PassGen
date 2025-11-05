@@ -1,0 +1,13 @@
+{
+    "wordlistFile": "InputOutput/words.txt",
+    "wordlistPreviousFile": "InputOutput/AlreadyTested",
+    "pathToHashcatFolder": "C:/Programing/Hashcat",
+    "outputFile": "InputOutput\\cracked.txt",
+    "wordlistsFolder": "WordsCombos",
+    "hashFile": "InputOutput\\pokihashes.txt",
+    "hashType": 0,
+    "maxBatchSize": 1000000,
+    "maxThreads": -1,
+    "passConfigPath": "Configs\\PassConfigs"
+   
+}
