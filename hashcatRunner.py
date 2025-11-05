@@ -26,6 +26,10 @@ class HashcatRunner:
         print("Hashcat path: ", self.hashcat_path)
         subprocess.run(hashcat_cmd, cwd=self.hashcat_path)
 
+        # clear output file
+        with open(output_path, 'w') as f:
+            f.write('')
+            
         # save
         hashcat_cmd = [
             "hashcat",
