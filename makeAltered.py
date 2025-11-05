@@ -9,16 +9,17 @@ import uuid
 
 class WordlistGenerator:
 
-    def __init__(self, numbers=None, symbols=None, wordlist_file='wordlist.txt', max_batch_size=2_000_000, max_threads=-1, folder_path='Wordlists', pass_config_extra="0"):
+    def __init__(self,  wordlist_file='wordlist.txt', max_batch_size=2_000_000, max_threads=-1, folder_path='Wordlists', config_path=os.path.join("Configs","TestPassConfigs","passConfig.json")):
 
-        config_path = os.path.join("Configs", f"passConfig{pass_config_extra}.json")
+        print(f"Loading pass configuration from {config_path}...")
         with open(config_path, "r") as f:
             config = json.load(f)
             self.passStyle = config.get("passwordStyle")
             self.permute_indices = config.get("permutate", config.get("permutate", []))
 
-        self.numbers = numbers or []
-        self.symbols = symbols or []
+
+        with open(os.path.join("Configs", "types.json"), "r") as f:
+            self.types = json.load(f)
         self.max_batch_size = max_batch_size
         self.max_threads = max_threads
         self.folder_path = folder_path
@@ -38,15 +39,10 @@ class WordlistGenerator:
             t = part.get("type", "").lower()
             if t == "word":
                 tokens = [self.word_indicator]
-            elif t in ("symbols", "symbol"):
-                tokens = list(self.symbols)
-            elif t in ("number", "numbers"):
-                tokens = list(self.numbers)
             elif t == "custom":
                 tokens = [part.get("word", "")]
             else:
-                tokens = []
-
+                tokens = self.types.get(t, [])
             result.append({
                 "tokens": tokens,
                 "minAmount": min_amt,
