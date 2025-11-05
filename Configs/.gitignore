@@ -1,0 +1,3 @@
+*.json
+!ex*.json
+!*.txt
