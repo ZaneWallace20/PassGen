@@ -15,7 +15,7 @@ class WordlistGenerator:
         with open(config_path, "r") as f:
             config = json.load(f)
             self.passStyle = config.get("passwordStyle")
-            self.permute_indices = config.get("permutate", [])
+            self.permutation_indices = config.get("permutations", [])
 
         with open(os.path.join("Configs", "types.json"), "r") as f:
             self.types = json.load(f)
@@ -113,8 +113,8 @@ class WordlistGenerator:
             for choice_tuple in product(*part_lists):
                 choice_list = list(choice_tuple)
 
-                if self.permute_indices:
-                    items_to_permute = [choice_list[i] for i in self.permute_indices]
+                if self.permutation_indices:
+                    items_to_permute = [choice_list[i] for i in self.permutation_indices]
                     
                     for item in items_to_permute:
                         temp_choice_list = choice_list.copy()
