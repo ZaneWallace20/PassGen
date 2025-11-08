@@ -22,6 +22,8 @@ class WordlistGenerator:
         self.max_batch_size = max_batch_size
         self.max_threads = max_threads
         self.folder_path = folder_path
+        self.min_password_length = config.get("minLength", 0)
+        self.padding_index = config.get("paddingIndex", -1)   
 
         self.word_indicator = uuid.uuid4().hex
         if wordlist_file != "":
@@ -70,8 +72,23 @@ class WordlistGenerator:
             perms = product(self.words, repeat=amount_to_add)
 
             for perm in perms:
-                print(perm)
 
+                if self.min_password_length > 0:
+                    length = len(''.join(perm)) + len(combo) - amount_to_add
+
+                    print(length)
+                    if length < self.min_password_length:
+                        temp_combo = []
+                        current_len = 0
+                        for i in combo:
+                            if i == self.word_indicator:
+                                current_len += len(''.join(perm))
+                            else:
+                                current_len += len(i)
+                            if current_len < self.min_password_length:
+                                temp_combo.append(i)
+
+                        combo = temp_combo
                 temp_combo = combo.copy()
                 all_combinations = [temp_combo]
                 
@@ -94,8 +111,8 @@ class WordlistGenerator:
                         temp_combo[temp_combo.index(self.word_indicator)] = word_to_add
                         index += 1
                 
-                        final = ''.join(temp_combo)
-                        result_list.append(final)
+                    final = ''.join(temp_combo)
+                    result_list.append(final)
                 
                 if len(result_list) >= max_batch_size:
                     self._save_to_disk(output_path, result_list)
@@ -110,10 +127,11 @@ class WordlistGenerator:
 
     def _generate_altered_list(self):
         format = self._generate_format()
-
         count_ranges = [range(dict["minAmount"], dict["maxAmount"] + 1) for dict in format]
         all_combinations = []
 
+
+        index = 0
         for counts in product(*count_ranges):
             part_lists = []
 
@@ -123,14 +141,21 @@ class WordlistGenerator:
                 if count == 0:
                     part_lists.append([""])
                     continue
-
-                combos = ["".join(tpl) for tpl in product(tokens, repeat=count)]
+                combos = []
+                print("INDEX:", index)
+                if self.min_password_length > 0 and index == self.padding_index:
+                    print("ADDING MORE FOR MIN LEN")
+                    combos = ["".join(tpl) for tpl in product(tokens, repeat=self.min_password_length - len(format))]
+                else:
+                    combos = ["".join(tpl) for tpl in product(tokens, repeat=count)]
                 part_lists.append(combos)
 
+                index += 1
             for choice_tuple in product(*part_lists):
                 choice_list = list(choice_tuple)
 
                 all_combinations.append(choice_list)
+        
         final_list = []
         seen = set()
 
@@ -139,7 +164,7 @@ class WordlistGenerator:
             if t not in seen:
                 seen.add(t)
                 final_list.append(combo)
-                
+        print(f"Generated {len(final_list)} unique altered combinations.") 
         return final_list
     
 
