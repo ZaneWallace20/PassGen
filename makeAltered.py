@@ -70,15 +70,32 @@ class WordlistGenerator:
             perms = product(self.words, repeat=amount_to_add)
 
             for perm in perms:
+                print(perm)
+
                 temp_combo = combo.copy()
-                index = 0
-                while self.word_indicator in temp_combo:
-                    word_to_add = perm[index]
-                    temp_combo[temp_combo.index(self.word_indicator)] = word_to_add
-                    index += 1
+                all_combinations = [temp_combo]
                 
-                final = ''.join(temp_combo)
-                result_list.append(final)
+                if self.permutation_indices:
+                    items_to_permute = [combo[i] for i in self.permutation_indices]
+                    
+                    for item in items_to_permute:
+                        temp_choice_list = combo.copy()
+                        combo.remove(item)
+                        for i in range(len(combo)+1):
+                            new_choice = combo.copy()
+                            new_choice.insert(i, item)
+                            all_combinations.append(new_choice)
+                                
+                        combo = temp_choice_list
+                for temp_combo in all_combinations:
+                    index = 0
+                    while self.word_indicator in temp_combo:
+                        word_to_add = perm[index]
+                        temp_combo[temp_combo.index(self.word_indicator)] = word_to_add
+                        index += 1
+                
+                        final = ''.join(temp_combo)
+                        result_list.append(final)
                 
                 if len(result_list) >= max_batch_size:
                     self._save_to_disk(output_path, result_list)
@@ -113,21 +130,7 @@ class WordlistGenerator:
             for choice_tuple in product(*part_lists):
                 choice_list = list(choice_tuple)
 
-                if self.permutation_indices:
-                    items_to_permute = [choice_list[i] for i in self.permutation_indices]
-                    
-                    for item in items_to_permute:
-                        temp_choice_list = choice_list.copy()
-                        choice_list.remove(item)
-                        for i in range(len(choice_list)+1):
-                            new_choice = choice_list.copy()
-                            new_choice.insert(i, item)
-                            all_combinations.append(new_choice)
-                                
-                        choice_list = temp_choice_list
-                else:
-                    all_combinations.append(choice_list)
-
+                all_combinations.append(choice_list)
         final_list = []
         seen = set()
 
