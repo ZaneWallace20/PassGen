@@ -58,6 +58,8 @@ class WordlistGenerator:
             for item in data:
                 f.write(f"\n{item}")
 
+
+    # takes the combos (stuff like ['!!', 'word_indicator', '123']) and makes the final words by replacing the word indicators with actual words
     def _threaded_function(self, combo_list, max_batch_size, thread_name):
         print(f"Thread {thread_name} started with {len(combo_list)} combinations.")
         
@@ -65,10 +67,15 @@ class WordlistGenerator:
         output_path = os.path.join(self.folder_path, f"altered_words_{thread_name}.txt")
         
         for combo in combo_list:
+            
+            # change from tuple to list for easier manipulation
             combo = list(combo)
+            
+            print(combo)
+            # check amount of word indicators in combo
             amount_to_add = combo.count(self.word_indicator)
+            print(amount_to_add)
             perms = product(self.words, repeat=amount_to_add)
-
             for perm in perms:
                 temp_combo = combo.copy()
                 index = 0
@@ -107,30 +114,84 @@ class WordlistGenerator:
                     part_lists.append([""])
                     continue
 
-                combos = ["".join(tpl) for tpl in product(tokens, repeat=count)]
-                part_lists.append(combos)
+                combos = []
+                
+                # use for words being unique
+                for tpl in product(tokens, repeat=count):
 
+
+                    '''
+                    words are uniuqe, how they work is we set a UUID as a token,
+                    this token is then replaced with actual words later on in the threaded function,
+                    however if there are multiple word indicators in a tpl, we need to keep them as separate items in a list
+                    in the normal way it would be UUIDUUID but we need [UUID, UUID] so we can replace them with different words later on
+                    however if this were just appended the permutations would be messde upas the index of the words would be off
+
+                    ie
+
+                    tpl = (word_indicator, word_indicator, '123')
+                    over
+                    tpl = ((word_indicator, word_indicator), '123')
+                    
+
+                    now the the permutaions are kept correct as the word indicators are separate items in the list
+
+                    '''
+                    if tokens == [self.word_indicator]:
+                        combo = []
+                        
+                        for word in tpl: 
+                            combo.append(word)
+                        combos.append(combo)
+                    else:
+                        combos.append("".join(tpl))
+
+                part_lists.append(combos)
             for choice_tuple in product(*part_lists):
                 choice_list = list(choice_tuple)
 
-                if self.permutation_indices:
-                    items_to_permute = [choice_list[i] for i in self.permutation_indices]
-                    
-                    for item in items_to_permute:
-                        temp_choice_list = choice_list.copy()
-                        choice_list.remove(item)
-                        for i in range(len(choice_list)+1):
-                            new_choice = choice_list.copy()
-                            new_choice.insert(i, item)
-                            all_combinations.append(new_choice)
-                                
-                        choice_list = temp_choice_list
-                else:
-                    all_combinations.append(choice_list)
+            #if there are permutation indices, permute those items in all possible positions
+            # ex: if indices are [0,2] and choice_list is ['a','b','c','d'], we permute 'a' and 'c' in all possible positions
+            # resulting in ['a','b','c','d'], ['c','b','a','d'], ['b','a','c','d'], etc.
+            if self.permutation_indices:
+                items_to_permute = [choice_list[i] for i in self.permutation_indices]
+                
+                for item in items_to_permute:
+                    temp_choice_list = choice_list.copy()
+                    choice_list.remove(item)
+                    for i in range(len(choice_list)+1):
+                        new_choice = choice_list.copy()
+                        new_choice.insert(i, item)
+                        temp_choice = []
+                        
+
+                        '''
+                        flatten the new_choice list in case there are lists inside (from word indicators)
+                        ex: new_choice = ['a', [word_indicator, word_indicator], 'b']
+                        becomes temp_choice = ['a', word_indicator, word_indicator, 'b']
+                        this is as threaded function expects a flat list
+                        '''
+                        for choice in new_choice:
+                            if isinstance(choice, list):
+                                temp_choice.extend(choice)
+                            else:
+                                temp_choice.append(choice)
+                            
+                        all_combinations.append(temp_choice)
+                            
+                    choice_list = temp_choice_list
+            else:
+                temp_choice = []
+                for choice in choice_list:
+                    if isinstance(choice, list):
+                        temp_choice.extend(choice)
+                    else:
+                        temp_choice.append(choice)
+                all_combinations.append(temp_choice)
 
         final_list = []
         seen = set()
-
+        # remove duplicates
         for combo in all_combinations:
             t = tuple(combo)
             if t not in seen:
@@ -140,8 +201,10 @@ class WordlistGenerator:
         return final_list
     
 
+    # the public func 
     def make_and_save_wordlist(self):
 
+        # Prepare output folder
         if os.path.exists(self.folder_path):
             print(f"Folder {self.folder_path} already exists.")
             print("Clearing out...")
@@ -149,11 +212,13 @@ class WordlistGenerator:
 
             
         os.makedirs(self.folder_path, exist_ok=True)
+
         # Determine number of threads to use
         if isinstance(self.max_threads, int) and self.max_threads > 0:
             num_threads = self.max_threads
         else:
             num_threads = os.cpu_count() or 4
+
         combos = self._generate_altered_list()
         chunks = np.array_split(combos, num_threads)
 
@@ -162,9 +227,11 @@ class WordlistGenerator:
             approx_count = len(chunks[0])
         except Exception:
             approx_count = 0
+
         print(f"Using {num_threads} threads with {approx_count} combinations each (approx).")
         current_thread_name  = [i+1 for i in range(num_threads)]
 
+        # threaded processing
         with ProcessPoolExecutor(max_workers=num_threads) as executor:
             executor.map(
                 self._threaded_function,

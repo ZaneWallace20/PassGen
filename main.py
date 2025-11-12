@@ -23,6 +23,7 @@ class PassGen:
         self.output_file = self.config.get('outputFile', 'cracked.txt')
         self.hash_type = self.config.get('hashType', 0)
         self.passConfigsPath = self.config.get('passConfigPath', os.path.join(base_dir, 'Configs', 'passConfigs.json'))
+
     def run(self):
         total_start = time.time()
 
