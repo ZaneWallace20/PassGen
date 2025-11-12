@@ -26,7 +26,7 @@ class Loader:
     def load_words(self):
         tested_words = self._grab_previously_tested()
         wordlist_set = set()
-        with open(self.filepath, 'r') as file:
+        with open(self.filepath, 'r', encoding='utf-8') as file:
             for line in file:
                 word = line.strip()
                 if word and word not in tested_words:
