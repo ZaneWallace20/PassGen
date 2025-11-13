@@ -121,7 +121,7 @@ class WordlistGenerator:
                 
                 # use for words being unique
                 for tpl in product(tokens, repeat=count):
-
+                    print(tpl)
 
                     '''
                     words are uniuqe, how they work is we set a UUID as a token,
@@ -150,46 +150,47 @@ class WordlistGenerator:
                         combos.append("".join(tpl))
 
                 part_lists.append(combos)
+
             for choice_tuple in product(*part_lists):
                 choice_list = list(choice_tuple)
 
-            #if there are permutation indices, permute those items in all possible positions
-            # ex: if indices are [0,2] and choice_list is ['a','b','c','d'], we permute 'a' and 'c' in all possible positions
-            # resulting in ['a','b','c','d'], ['c','b','a','d'], ['b','a','c','d'], etc.
-            if self.permutation_indices:
-                items_to_permute = [choice_list[i] for i in self.permutation_indices]
-                
-                for item in items_to_permute:
-                    temp_choice_list = choice_list.copy()
-                    choice_list.remove(item)
-                    for i in range(len(choice_list)+1):
-                        new_choice = choice_list.copy()
-                        new_choice.insert(i, item)
-                        temp_choice = []
-
-                        '''
-                        flatten the new_choice list in case there are lists inside (from word indicators)
-                        ex: new_choice = ['a', [word_indicator, word_indicator], 'b']
-                        becomes temp_choice = ['a', word_indicator, word_indicator, 'b']
-                        this is as threaded function expects a flat list
-                        '''
-                        for choice in new_choice:
-                            if isinstance(choice, list):
-                                temp_choice.extend(choice)
-                            else:
-                                temp_choice.append(choice)
+                #if there are permutation indices, permute those items in all possible positions
+                # ex: if indices are [0,2] and choice_list is ['a','b','c','d'], we permute 'a' and 'c' in all possible positions
+                # resulting in ['a','b','c','d'], ['c','b','a','d'], ['b','a','c','d'], etc.
+                if self.permutation_indices:
+                    items_to_permute = [choice_list[i] for i in self.permutation_indices]
+                    
+                    for item in items_to_permute:
+                        temp_choice_list = choice_list.copy()
+                        choice_list.remove(item)
+                        for i in range(len(choice_list)+1):
+                            new_choice = choice_list.copy()
+                            new_choice.insert(i, item)
+                            temp_choice = []
                             
-                        all_combinations.append(temp_choice)
-                            
-                    choice_list = temp_choice_list
-            else:
-                temp_choice = []
-                for choice in choice_list:
-                    if isinstance(choice, list):
-                        temp_choice.extend(choice)
-                    else:
-                        temp_choice.append(choice)
-                all_combinations.append(temp_choice)
+                            '''
+                            flatten the new_choice list in case there are lists inside (from word indicators)
+                            ex: new_choice = ['a', [word_indicator, word_indicator], 'b']
+                            becomes temp_choice = ['a', word_indicator, word_indicator, 'b']
+                            this is as threaded function expects a flat list
+                            '''
+                            for choice in new_choice:
+                                if isinstance(choice, list):
+                                    temp_choice.extend(choice)
+                                else:
+                                    temp_choice.append(choice)
+                                
+                                all_combinations.append(temp_choice)
+                                
+                        choice_list = temp_choice_list
+                else:
+                    temp_choice = []
+                    for choice in choice_list:
+                        if isinstance(choice, list):
+                            temp_choice.extend(choice)
+                        else:
+                            temp_choice.append(choice)
+                    all_combinations.append(temp_choice)
 
         final_list = []
         seen = set()
