@@ -53,11 +53,10 @@ class WordlistGenerator:
             })
 
         return result
+
     def _save_to_disk(self, path, data):
         with open(path, 'a', encoding='utf-8') as f:  
-            for item in data:
-                f.write(f"\n{item}")
-
+            f.writelines(f"\n{item}" for item in data)
 
     # takes the combos (stuff like ['!!', 'word_indicator', '123']) and makes the final words by replacing the word indicators with actual words
     def _threaded_function(self, combo_list, max_batch_size, thread_name):
@@ -66,19 +65,18 @@ class WordlistGenerator:
         result_list = []
         output_path = os.path.join(self.folder_path, f"altered_words_{thread_name}.txt")
 
+        old_indices_length = 0
         for combo in combo_list:
 
-            # check amount of word indicators in combo
-            amount_to_add = 0 
-            for item in combo:
-                if item == self.word_indicator:
-                    amount_to_add += 1
+            indices = [i for i, x in enumerate(combo) if x == self.word_indicator]
+            if old_indices_length != len(indices):
+                perms = product(self.words, repeat=len(indices))
+                
+            old_indices_length = len(indices)
 
-            perms = product(self.words, repeat=amount_to_add)
             for perm in perms:
-                temp_combo = combo.copy()
+                temp_combo = [i for i in combo] 
 
-                indices = [i for i, x in enumerate(temp_combo) if x == self.word_indicator]
                 index = 0
                 while self.word_indicator in temp_combo:
                     word_to_add = perm[index]
@@ -90,7 +88,7 @@ class WordlistGenerator:
                 
                 if len(result_list) >= max_batch_size:
                     self._save_to_disk(output_path, result_list)
-                    result_list.clear()
+                    result_list = []
 
         # any left 
         if result_list:
