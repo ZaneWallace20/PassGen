@@ -65,23 +65,26 @@ class WordlistGenerator:
         
         result_list = []
         output_path = os.path.join(self.folder_path, f"altered_words_{thread_name}.txt")
-        
-        for combo in combo_list:
-            
-            # change from tuple to list for easier manipulation
-            combo = list(combo)
-            
-            print(combo)
+
+        this_combo_list = combo_list.copy()  # Convert numpy array to list if necessary 
+        for combo in this_combo_list:
+
+
             # check amount of word indicators in combo
-            amount_to_add = combo.count(self.word_indicator)
-            print(amount_to_add)
+            amount_to_add = 0 
+            for item in combo:
+                print(item)
+                if item == self.word_indicator:
+                    amount_to_add += 1
+
             perms = product(self.words, repeat=amount_to_add)
             for perm in perms:
                 temp_combo = combo.copy()
+                indices = [i for i, x in enumerate(temp_combo) if x == self.word_indicator]
                 index = 0
                 while self.word_indicator in temp_combo:
                     word_to_add = perm[index]
-                    temp_combo[temp_combo.index(self.word_indicator)] = word_to_add
+                    temp_combo[indices[index]] = word_to_add
                     index += 1
                 
                 final = ''.join(temp_combo)
@@ -163,7 +166,6 @@ class WordlistGenerator:
                         new_choice = choice_list.copy()
                         new_choice.insert(i, item)
                         temp_choice = []
-                        
 
                         '''
                         flatten the new_choice list in case there are lists inside (from word indicators)
