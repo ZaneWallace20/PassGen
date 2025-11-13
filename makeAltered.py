@@ -73,7 +73,6 @@ class WordlistGenerator:
             # check amount of word indicators in combo
             amount_to_add = 0 
             for item in combo:
-                print(item)
                 if item == self.word_indicator:
                     amount_to_add += 1
 
@@ -121,7 +120,6 @@ class WordlistGenerator:
                 
                 # use for words being unique
                 for tpl in product(tokens, repeat=count):
-                    print(tpl)
 
                     '''
                     words are uniuqe, how they work is we set a UUID as a token,
