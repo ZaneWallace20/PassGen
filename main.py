@@ -31,6 +31,7 @@ class PassGen:
         pass_configs = [os.path.join(self.passConfigsPath, name) for name in os.listdir(self.passConfigsPath) if name.endswith('.json')]
         for i in pass_configs:
             print(f"Starting pass configuration {i}...")
+
             # Instantiate WordlistGenerator with values read from main config
             wordlist_generator = WordlistGenerator(
                 wordlist_file=self.wordlist_file,

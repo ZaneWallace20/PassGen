@@ -66,9 +66,7 @@ class WordlistGenerator:
         result_list = []
         output_path = os.path.join(self.folder_path, f"altered_words_{thread_name}.txt")
 
-        this_combo_list = combo_list.copy()  # Convert numpy array to list if necessary 
-        for combo in this_combo_list:
-
+        for combo in combo_list:
 
             # check amount of word indicators in combo
             amount_to_add = 0 
@@ -79,6 +77,7 @@ class WordlistGenerator:
             perms = product(self.words, repeat=amount_to_add)
             for perm in perms:
                 temp_combo = combo.copy()
+
                 indices = [i for i, x in enumerate(temp_combo) if x == self.word_indicator]
                 index = 0
                 while self.word_indicator in temp_combo:
