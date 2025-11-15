@@ -71,10 +71,8 @@ class WordlistGenerator:
             # change from tuple to list for easier manipulation
             combo = list(combo)
             
-            print(combo)
             # check amount of word indicators in combo
             amount_to_add = combo.count(self.word_indicator)
-            print(amount_to_add)
             perms = product(self.words, repeat=amount_to_add)
             for perm in perms:
                 temp_combo = combo.copy()
@@ -118,7 +116,6 @@ class WordlistGenerator:
                 
                 # use for words being unique
                 for tpl in product(tokens, repeat=count):
-                    print(tpl)
 
                     '''
                     words are uniuqe, how they work is we set a UUID as a token,
