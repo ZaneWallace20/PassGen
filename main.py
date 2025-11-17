@@ -23,6 +23,7 @@ class PassGen:
         self.output_file = self.config.get('outputFile', 'cracked.txt')
         self.hash_type = self.config.get('hashType', 0)
         self.passConfigsPath = self.config.get('passConfigPath', os.path.join(base_dir, 'Configs', 'passConfigs.json'))
+        self.max_wordlist_size_gb = self.config.get('maxWordlistSizeGB', 20)
 
     def run(self):
         total_start = time.time()
@@ -31,15 +32,6 @@ class PassGen:
         pass_configs = [os.path.join(self.passConfigsPath, name) for name in os.listdir(self.passConfigsPath) if name.endswith('.json')]
         for i in pass_configs:
             print(f"Starting pass configuration {i}...")
-            # Instantiate WordlistGenerator with values read from main config
-            wordlist_generator = WordlistGenerator(
-                wordlist_file=self.wordlist_file,
-                max_batch_size=self.max_batch_size,
-                max_threads=self.max_threads,
-                folder_path=self.folder_path,
-                config_path=i
-            )
-
             hashcat_runner = HashcatRunner(
                 output_file=self.output_file,
                 hash_file=self.hash_file,
@@ -47,6 +39,18 @@ class PassGen:
                 folder_path=self.folder_path,
                 hashcat_path=self.path_to_hashcat_folder
             )
+
+            # Instantiate WordlistGenerator with values read from main config
+            wordlist_generator = WordlistGenerator(
+                hashcat=hashcat_runner,
+                wordlist_file=self.wordlist_file,
+                max_batch_size=self.max_batch_size,
+                max_threads=self.max_threads,
+                folder_path=self.folder_path,
+                config_path=i,
+                max_wordlist_size_gb=self.max_wordlist_size_gb
+            )
+
 
             wordlist_generator.make_and_save_wordlist()
 

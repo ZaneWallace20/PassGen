@@ -1,15 +1,15 @@
 from itertools import product
-from concurrent.futures import ProcessPoolExecutor
+from concurrent.futures import ThreadPoolExecutor 
+import threading
 import json
 from wordlist import Loader
 import numpy as np
 import os
 import shutil
 import uuid
-
 class WordlistGenerator:
 
-    def __init__(self,  wordlist_file='wordlist.txt', max_batch_size=2_000_000, max_threads=-1, folder_path='Wordlists', config_path=os.path.join("Configs","TestPassConfigs","passConfig.json")):
+    def __init__(self, hashcat, wordlist_file='wordlist.txt', max_batch_size=2_000_000, max_threads=-1, folder_path='Wordlists', config_path=os.path.join("Configs","TestPassConfigs","passConfig.json"), max_wordlist_size_gb=20):
 
         print(f"Loading pass configuration from {config_path}...")
         with open(config_path, "r") as f:
@@ -28,6 +28,12 @@ class WordlistGenerator:
             self.words = Loader(wordlist_file).load_words()
         else:
             self.words = []
+        self.configed_hashcat = hashcat
+        self.max_wordlist_size_gb = max_wordlist_size_gb
+        self.is_hashing = False
+        
+        # used to prevent hashcat from running multiple instances at once
+        self.hashcat_running = threading.Event() 
 
     def _generate_format(self):
         
@@ -59,13 +65,21 @@ class WordlistGenerator:
                 f.write(f"\n{item}")
 
 
+    def _calculate_file_size_gb(self, path):
+        total_size = 0
+        total_size += os.path.getsize(path)
+        return total_size / (1024 ** 3)
+
+    
     # takes the combos (stuff like ['!!', 'word_indicator', '123']) and makes the final words by replacing the word indicators with actual words
     def _threaded_function(self, combo_list, max_batch_size, thread_name):
         print(f"Thread {thread_name} started with {len(combo_list)} combinations.")
         
         result_list = []
         output_path = os.path.join(self.folder_path, f"altered_words_{thread_name}.txt")
-        
+        save_counter = 0
+        estimated_total_size = 0
+        estimated_file_size = 0
         for combo in combo_list:
             
             # change from tuple to list for easier manipulation
@@ -88,11 +102,35 @@ class WordlistGenerator:
                 if len(result_list) >= max_batch_size:
                     self._save_to_disk(output_path, result_list)
                     result_list.clear()
+                    
+                    save_counter += 1
+
+                    # estimate size
+                    if save_counter == 1:
+                        
+                        # on first save, calculate actual size
+                        estimated_total_size = self._calculate_file_size_gb(output_path)
+                        estimated_file_size = estimated_total_size
+                    else:
+                        # on subsequent saves, use previous estimate
+                        estimated_total_size += estimated_file_size
+                        
+                        # check if estimated size exceeds max
+                        if estimated_total_size >= self.max_wordlist_size_gb:
+                            if not self.hashcat_running.is_set():
+                                # is hashing
+                                self.hashcat_running.set()
+                                try:
+                                    self.configed_hashcat.run_hashcat_on_file(output_path)
+                                    estimated_total_size = 0
+                                    save_counter = 0
+                                finally:
+                                    self.hashcat_running.clear()
+
 
         # any left 
         if result_list:
             self._save_to_disk(output_path, result_list)
-
         print(f"Thread {thread_name} finished writing to {output_path}.")
 
 
@@ -218,7 +256,6 @@ class WordlistGenerator:
 
         combos = self._generate_altered_list()
         chunks = np.array_split(combos, num_threads)
-
         print("Processing words in threads...")
         try:
             approx_count = len(chunks[0])
@@ -229,11 +266,11 @@ class WordlistGenerator:
         current_thread_name  = [i+1 for i in range(num_threads)]
 
         # threaded processing
-        with ProcessPoolExecutor(max_workers=num_threads) as executor:
+        with ThreadPoolExecutor(max_workers=num_threads) as executor:
             executor.map(
                 self._threaded_function,
                 chunks,
                 [self.max_batch_size] * num_threads,
                 current_thread_name
-        )
+            )
             
