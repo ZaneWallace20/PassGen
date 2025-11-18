@@ -21,7 +21,7 @@ class Loader:
         word = word.replace(" ","")
 
         # remove duplicates
-        return list(set([word, word.lower(), word.upper(), cap_word.replace(" ","")]))
+        return list(set([word.lower()]))
 
     def load_words(self):
         tested_words = self._grab_previously_tested()

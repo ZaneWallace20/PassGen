@@ -78,8 +78,11 @@ class WordlistGenerator:
         result_list = []
         output_path = os.path.join(self.folder_path, f"altered_words_{thread_name}.txt")
         save_counter = 0
+        
+        # estimation to prevent calculating file size every time
         estimated_total_size = 0
         estimated_file_size = 0
+        
         for combo in combo_list:
             
             # change from tuple to list for easier manipulation
@@ -131,8 +134,8 @@ class WordlistGenerator:
         # any left 
         if result_list:
             self._save_to_disk(output_path, result_list)
+        
         print(f"Thread {thread_name} finished writing to {output_path}.")
-
 
     def _generate_altered_list(self):
         format = self._generate_format()

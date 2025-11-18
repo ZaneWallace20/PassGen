@@ -54,7 +54,6 @@ class HashcatRunner:
         # runs hashcat over the massive wordlist FILE 
         hashcat_cmd = [
             "hashcat",
-            "--quiet",
             "--logfile-disable",
             "-m", str(self.hash_type),
             "-a", "0",
